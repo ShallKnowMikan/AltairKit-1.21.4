@@ -1,0 +1,8 @@
+name: "Altair"
+version: 1.0
+main: dev.mikan.altairkit.AltairKit
+api-version: 1.21
+libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22
+  - org.jetbrains.kotlin:kotlin-reflect:1.9.22
+  - net.kyori:adventure-text-minimessage:4.14.0
