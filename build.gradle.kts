@@ -1,11 +1,11 @@
 plugins {
     id("java")
     id ("com.gradleup.shadow") version "8.3.0"
-    kotlin("jvm")
+    kotlin("jvm") version "1.9.22"
 }
 
 group = "dev.mikan"
-version = "1.8.8"
+version = "test"
 
 val outputDir = file(project.extra["outputDir"] as String)
 val copyBoolean = project.extra["copy"] as Boolean
@@ -18,20 +18,21 @@ tasks.register<Copy>("copy"){
 }
 
 tasks.register<Exec>("updateRepo"){
-    workingDir = file("/home/mikan/IdeaProjects/AltairKit-1.8.8/build/libs/")
+    workingDir = file("/home/mikan/IdeaProjects/Altair/build/libs/")
     commandLine(
-        "mvn",
+        "/usr/bin/mvn",
         "install:install-file",
-        "-Dfile=Altair-1.8.8.jar",
+        "-Dfile=Altair-test.jar",
         "-DgroupId=dev.mikan",
         "-DartifactId=AltairKit",
-        "-Dversion=1.8.8",
+        "-Dversion=test",
         "-Dpackaging=jar"
     )}
 
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>(){
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     archiveClassifier.set("")
-    relocate("dev.mikan.altairkit", "dev.mikan.shaded.altairkit")
+
+    relocate("net.kyori", "net.kyori")
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -45,6 +46,10 @@ java {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven("https://repo.papermc.io/repository/maven-public/")
+    maven {
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
     maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
 
     maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
@@ -55,18 +60,17 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot:1.8.8-R0.1-SNAPSHOT")
-    compileOnly ("org.projectlombok:lombok:1.18.36")
-    annotationProcessor ("org.projectlombok:lombok:1.18.36")
+    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
 
-    implementation("org.slf4j:slf4j-api:2.0.13")
-    implementation("org.slf4j:slf4j-simple:2.0.13")
-    implementation(kotlin("stdlib-jdk8"))
+    compileOnly(kotlin("stdlib-jdk8"))
+    compileOnly(kotlin("reflect"))
+
+    implementation("net.kyori:adventure-api:4.24.0")
+    implementation("net.kyori:adventure-text-minimessage:4.24.0")
 }
 
 tasks.named("build"){
-//    dependsOn(tasks.named("shadowJar"))
-
+    dependsOn(tasks.named("shadowJar"))
     if (copyBoolean)
         finalizedBy("copy")
 
