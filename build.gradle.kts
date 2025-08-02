@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.mikan"
-version = "test"
+version = "1.21.4"
 
 val outputDir = file(project.extra["outputDir"] as String)
 val copyBoolean = project.extra["copy"] as Boolean

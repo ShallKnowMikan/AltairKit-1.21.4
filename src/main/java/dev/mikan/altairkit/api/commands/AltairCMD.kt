@@ -3,7 +3,7 @@ package dev.mikan.altairkit.api.commands
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToDouble
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToInt
 import dev.mikan.altairkit.api.commands.annotations.*
-import dev.mikan.altairkit.utils.Cmd
+import dev.mikan.altairkit.api.commands.Cmd
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
@@ -39,11 +39,11 @@ class AltairCMD(
             }
         }
 
-        when (this.sender?.user) {
-            null -> {
-                return false
-            }
+        if (permission == null) return false
+        if (permission.blocking && !actor.hasPermission(permission.permission)) return false
 
+        when (this.sender?.user) {
+            null -> return false
             User.CONSOLE -> if (!actor.isConsole()) return false
             User.PLAYER -> if (!actor.isPlayer()) return false
             else -> {}
@@ -73,7 +73,7 @@ class AltairCMD(
         * */
 
         for (i in onPerform.parameters.indices) {
-            if (i < 3) continue
+            if (i <= 3) continue
             val param = onPerform.parameters[i]
             when (param.type.classifier) {
                 Player::class -> params[param] = Bukkit.getPlayer(args[onPerform.parameters.indexOf(param) - 3])
@@ -96,14 +96,53 @@ class AltairCMD(
     }
 
     override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
-        val bestMatch = findBestMatch(args.last())
+        val logger = Bukkit.getLogger()
+        logger.info("command: ${this.name}")
+        logger.info("subcommands: $subcommands")
+        logger.info("alias: $alias")
+        logger.info("args: ${args.toList()}")
 
-        return if (bestMatch != null && bestMatch.isNotEmpty()) this.subcommands.toMutableList().apply { this.addFirst(bestMatch) }
-        else super.tabComplete(sender, alias, args)
+        // No args if args.size == 1, default ""
+        var cmd: AltairCMD? = this
+        if (args.size > 2) {
+            for (arg in args) {
+                if (subcommands.contains(arg)) {
+                    cmd = Cmd.cmdCache[arg]
+                }
+            }
+        }
+        return if (args.size < 3) {
+            subcommands.filter { sub -> sub.startsWith(args[1]) }
+        } else return this.subcommands.toList()
     }
 
-    fun findBestMatch(string: String) : String? {
-        return this.subcommands.find { it.startsWith(string) }
+//    override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
+//        val logger = Bukkit.getLogger()
+//        logger.info("command: ${this.name}")
+//        logger.info("subcommands: $subcommands")
+//        logger.info("alias: $alias")
+//        logger.info("args: ${args.toList()}")
+//        if (subcommands.isEmpty()) return listOf(this.name)
+//
+//        val match = findBestMatch(args.getOrElse(1, { "" }))
+//
+//        logger.info("match: $match")
+//
+//        if (!subcommands.contains(match)) super.tabComplete(sender, alias, args)
+//
+//        Cmd.cmdCache[match]?.let { cmd ->
+//            logger.info("Enter in let block: $match")
+//            return cmd.tabComplete(sender,match,args.toMutableList().apply { this.add(alias) }.toTypedArray()) }
+//
+//        return super.tabComplete(sender, alias, args)
+//    }
+
+    fun findBestMatch(string: String) : String {
+        return (this.subcommands.find { it.startsWith(string) }).orEmpty()
+    }
+
+    fun findBestMatch(string: String,collection: List<String>) : String? {
+        return collection.find { it.startsWith(string) }
     }
 
     override fun toString(): String {

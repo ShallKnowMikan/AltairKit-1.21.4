@@ -7,10 +7,10 @@ import dev.mikan.altairkit.api.commands.annotations.*
 
 class Commands : CmdClass{
 
-    @Command("test mariokart")
+    @Command("test mariokart 8 deluxe")
     @Complete("ciao")
     @Permission("dev.mikan.test",false)
-    @Sender(User.PLAYER)
+    @Sender(User.CONSOLE)
     fun test(cmd: AltairCMD,actor: Actor,string: Double){
         actor.reply("<green>Received: $string")
     }

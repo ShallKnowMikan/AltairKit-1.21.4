@@ -1,7 +1,7 @@
 package dev.mikan.altairkit
 
 import dev.mikan.altairkit.test.Commands
-import dev.mikan.altairkit.utils.Cmd
+import dev.mikan.altairkit.api.commands.Cmd
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit

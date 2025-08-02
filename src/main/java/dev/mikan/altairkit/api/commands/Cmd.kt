@@ -1,11 +1,10 @@
-package dev.mikan.altairkit.utils
+package dev.mikan.altairkit.api.commands
 
-import dev.mikan.altairkit.api.commands.AltairCMD
-import dev.mikan.altairkit.api.commands.CmdClass
 import dev.mikan.altairkit.api.commands.annotations.Command
 import dev.mikan.altairkit.api.commands.annotations.Complete
 import dev.mikan.altairkit.api.commands.annotations.Permission
 import dev.mikan.altairkit.api.commands.annotations.Sender
+import dev.mikan.altairkit.utils.Tree
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandMap
 import java.lang.reflect.Field
@@ -14,7 +13,6 @@ import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 
-
 class Cmd {
 
     companion object {
@@ -22,6 +20,8 @@ class Cmd {
         val logger = Bukkit.getLogger()
 
         val cmdCache = mutableMapOf<String, AltairCMD>()
+
+        val cache = mutableSetOf(Tree<AltairCMD>())
 
         @JvmStatic fun registerCommands(instance: CmdClass){
             for (method in instance::class.declaredFunctions) {
@@ -69,7 +69,7 @@ class Cmd {
 
 
         @JvmStatic
-        fun getCommandMap() : CommandMap{
+        fun getCommandMap() : CommandMap {
             return try {
                 val mapField: Field = Bukkit.getServer().javaClass.getDeclaredField("commandMap")
                 mapField.isAccessible = true

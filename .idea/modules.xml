@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Altair.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Altair.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Altair.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Altair.test.iml" />
     </modules>
   </component>
 </project>

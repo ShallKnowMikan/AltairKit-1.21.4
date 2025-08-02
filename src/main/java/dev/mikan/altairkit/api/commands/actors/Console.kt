@@ -15,13 +15,13 @@ class Console : Actor {
     }
 
     override var args: List<String>
-        get() = args
+        get() = _args
         set(value) {
             _args = value
         }
 
     override var sender: CommandSender
-        get() = sender
+        get() = _sender?: throw IllegalStateException("Sender not initialized")
         set(value) {_sender = value}
 
     override fun isConsole(): Boolean {
