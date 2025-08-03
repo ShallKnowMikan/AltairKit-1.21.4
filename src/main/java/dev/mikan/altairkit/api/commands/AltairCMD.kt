@@ -4,25 +4,26 @@ import dev.mikan.altairkit.AltairKit.Companion.isParsableToDouble
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToInt
 import dev.mikan.altairkit.api.commands.annotations.*
 import dev.mikan.altairkit.api.commands.Cmd
+import dev.mikan.altairkit.utils.Tree
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
+import java.lang.IndexOutOfBoundsException
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 
 class AltairCMD(
     name: String,
-    private val onPerform: KFunction<*>,
-    private val instance: Any,
+    val tree: Tree<AltairCMD>,
+    var onPerform: KFunction<*>?,
+    private val instance: Any?,
     val command: Command? = null,
     val complete: Complete? = null,
     val sender: Sender? = null,
     val permission: Permission? = null,
 ) : BukkitCommand(name) {
-
-    val subcommands = mutableSetOf<String>()
 
     override fun execute(
         sender: CommandSender,
@@ -49,13 +50,15 @@ class AltairCMD(
             else -> {}
         }
 
-        if (args.isEmpty() && this.subcommands.isNotEmpty()) return false
 
-        if (args.isNotEmpty() && this.subcommands.contains(args[0])) {
-            val subcommand = Cmd.cmdCache[args[0]]
-            subcommand?.execute(sender,args[0],args.copyOfRange(1,args.size))
+
+        if (args.isNotEmpty() && tree.fetch { cmd -> cmd.name == args[0] } != null) {
+            val subCommand = tree.fetch { cmd -> cmd.name == args[0] }
+            subCommand?.execute(sender,args[0],args.copyOfRange(1,args.size))
             return false
         }
+
+        if (onPerform == null) return false
 
         /*
         * Since param 1, 2 and 3 in the method will always be
@@ -63,24 +66,41 @@ class AltairCMD(
         * always be sure that i - 3 won't cause exceptions
         * */
 
-        params[onPerform.parameters[0]] = instance
-        params[onPerform.parameters[1]] = this
-        params[onPerform.parameters[2]] = actor
+        params[onPerform!!.parameters[0]] = instance
+        params[onPerform!!.parameters[1]] = this
+        params[onPerform!!.parameters[2]] = actor
 
         /*
         * Wrong parameters will bring to null values, -1
         * or empty strings
+        * if the method requires 3 parameters and only 2
+        * have been passed then the last will enter the
+        * catch for index out of bounds (args - 3 = invalid index)
         * */
 
-        for (i in onPerform.parameters.indices) {
-            if (i <= 3) continue
-            val param = onPerform.parameters[i]
+        for (i in onPerform!!.parameters.indices) {
+            if (i < 3) continue
+            val param = onPerform!!.parameters[i]
             when (param.type.classifier) {
-                Player::class -> params[param] = Bukkit.getPlayer(args[onPerform.parameters.indexOf(param) - 3])
-                String::class -> params[param] = args[onPerform.parameters.indexOf(param) - 3]
-                Int::class -> params[param] = if (args[onPerform.parameters.indexOf(param) - 3].isParsableToInt()) args[onPerform.parameters.indexOf(param) - 3].toInt() else -1
+                Player::class -> params[param] = try {
+                    Bukkit.getPlayer(args[onPerform!!.parameters.indexOf(param) - 3])
+                } catch (e: IndexOutOfBoundsException) { null }
+                String::class -> params[param] = try {
+                    args[onPerform!!.parameters.indexOf(param) - 3]
+                } catch (e: IndexOutOfBoundsException) { "" }
+                Int::class -> params[param] =  {
+                    val arg = try {
+                        args[onPerform!!.parameters.indexOf(param) - 3]
+                    } catch (e: IndexOutOfBoundsException) { "-1" }
+                    params[param] = when {
+                        arg.isParsableToInt() -> arg.toInt()
+                        else -> -1
+                    }
+                }
                 Double::class -> {
-                    val arg = args[onPerform.parameters.indexOf(param) - 3]
+                    val arg = try {
+                        args[onPerform!!.parameters.indexOf(param) - 3]
+                    } catch (e: IndexOutOfBoundsException) { "-1" }
                     params[param] = when {
                         arg.isParsableToDouble() -> arg.toDouble()
                         arg.isParsableToInt() -> arg.toInt().toDouble()
@@ -91,62 +111,41 @@ class AltairCMD(
             }
         }
 
-        onPerform.callBy(params)
+        onPerform!!.callBy(params)
         return true
     }
 
     override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
+
+//        val possibleCommands = tree.filter { node -> node.data.name.startsWith(args.getOrElse(0){""}) }
         val logger = Bukkit.getLogger()
-        logger.info("command: ${this.name}")
-        logger.info("subcommands: $subcommands")
-        logger.info("alias: $alias")
-        logger.info("args: ${args.toList()}")
+        logger.info { "Args: $args" }
+        val node = tree.search(this)
+        node?: super.tabComplete(sender, alias, args)
+        val possibleCommands = node!!.children.filter { node -> node.data.name.startsWith(args.getOrElse(0){""}) }
 
-        // No args if args.size == 1, default ""
-        var cmd: AltairCMD? = this
-        if (args.size > 2) {
-            for (arg in args) {
-                if (subcommands.contains(arg)) {
-                    cmd = Cmd.cmdCache[arg]
-                }
-            }
-        }
-        return if (args.size < 3) {
-            subcommands.filter { sub -> sub.startsWith(args[1]) }
-        } else return this.subcommands.toList()
+
+
+        val possibleCmdList = mutableListOf<String>()
+        possibleCommands.forEach { node -> possibleCmdList.add(node.data.name) }
+        logger.info { "Possible commands: $possibleCommands" }
+        return possibleCmdList
+
     }
 
-//    override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
-//        val logger = Bukkit.getLogger()
-//        logger.info("command: ${this.name}")
-//        logger.info("subcommands: $subcommands")
-//        logger.info("alias: $alias")
-//        logger.info("args: ${args.toList()}")
-//        if (subcommands.isEmpty()) return listOf(this.name)
-//
-//        val match = findBestMatch(args.getOrElse(1, { "" }))
-//
-//        logger.info("match: $match")
-//
-//        if (!subcommands.contains(match)) super.tabComplete(sender, alias, args)
-//
-//        Cmd.cmdCache[match]?.let { cmd ->
-//            logger.info("Enter in let block: $match")
-//            return cmd.tabComplete(sender,match,args.toMutableList().apply { this.add(alias) }.toTypedArray()) }
-//
-//        return super.tabComplete(sender, alias, args)
+
+
+//    fun findBestMatch(string: String) : String {
+//        val subcommands = Cmd.cache[this.name]?.sea
+//        return (subcommands.find { it.startsWith(string) }).orEmpty()
 //    }
-
-    fun findBestMatch(string: String) : String {
-        return (this.subcommands.find { it.startsWith(string) }).orEmpty()
-    }
 
     fun findBestMatch(string: String,collection: List<String>) : String? {
         return collection.find { it.startsWith(string) }
     }
 
     override fun toString(): String {
-        return this.name + " / " + this.subcommands
+        return this.name
     }
 
 }

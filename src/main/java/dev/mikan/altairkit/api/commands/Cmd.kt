@@ -19,9 +19,9 @@ class Cmd {
 
         val logger = Bukkit.getLogger()
 
-        val cmdCache = mutableMapOf<String, AltairCMD>()
+        // root name -> tree
+        val cache = mutableMapOf<String,Tree<AltairCMD>>()
 
-        val cache = mutableSetOf(Tree<AltairCMD>())
 
         @JvmStatic fun registerCommands(instance: CmdClass){
             for (method in instance::class.declaredFunctions) {
@@ -44,24 +44,51 @@ class Cmd {
 
                 // load subcommands and cache
                 val tokens = commandAnnotation.cmd.split(" ")
+                logger.info { "Tokens: $tokens" }
+                val cmdTree = cache[tokens[0]]?: Tree()
                 for (i in tokens.indices) {
                     val cmdString = tokens[i]
-                    val cmd = AltairCMD(cmdString,method,instance,commandAnnotation,completeAnnotation,senderAnnotation,permissionAnnotation)
+                    val cmd = AltairCMD(cmdString,cmdTree,if (i + 1 == tokens.size) method else null,instance,commandAnnotation,completeAnnotation,senderAnnotation,permissionAnnotation)
 
-                    // load cache and updates command map (creating the actual command)
-                    cmdCache[cmdString] = cmd
+                    val isRoot = i == 0
+
+                    // In order to register subcommands and then still allow
+                    // method assignation to root command
+                    if (isRoot && tokens.size == 1 && cmdTree.root != null) {
+                        cmdTree.root!!.data.onPerform = method
+                        continue
+                    } else if (isRoot) {
+                        // Inner check since if it is root it still has to use continue
+                        if (cmdTree.root == null) {
+                            logger.info { "Root: $cmd" }
+                            cmdTree.setRoot(cmd)
+                            getCommandMap().register(cmdString,cmd)
+                        }
+                        continue
+                    }
+
+                    // Add new subcommand as node to parent in tree
+
+                    val parentName = tokens[i - 1]
+                    val parent = cmdTree.fetch { cmd -> cmd.name == parentName}
+                    logger.info { "Parent: $parent" }
+                    logger.info { "Cmd: $cmd" }
+                    // Uses the condition passed by lambda to detect if there is an existing instance already
+                    // without lambda it will do a raw check between instances with == operator
+                    cmdTree.insert(parent!!,cmd) { inner -> inner.name == cmd.name }
+
                     getCommandMap().register(cmdString,cmd)
 
                     if (i + 1 == tokens.size) {
                         // Last iteration
                         // Preventing index out of bound exception
-                        break
+                        continue
                     }
 
-                    cmd.subcommands.add(tokens[i+ 1])
                 }
+                cache.putIfAbsent(cmdTree.root!!.data.name,cmdTree)
             }
-            logger.info("Registered commands: $cmdCache")
+            logger.info("Registered commands: ${cache.values}")
         }
 
 
