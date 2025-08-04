@@ -10,11 +10,13 @@ class Commands : CmdClass{
 
 
     @Command("test mariokart 8 deluxe")
-    @Complete("ciao")
+    @Complete("ciao","jakehill","joshA", "slim")
     @Permission("dev.mikan.test",false)
     @Sender(User.CONSOLE)
     fun test(cmd: AltairCMD,actor: Actor,string: Double){
-        actor.reply("<green>Received: $string")
+        actor.reply("<green>Complete: ${cmd.complete?.args?.get(0)}")
+        actor.reply("<green>Permission: ${cmd.permission?.permission}")
+        actor.reply("<green>Sender type: ${cmd.sender?.user}")
     }
 
     @Command("test mariokart 7")
@@ -22,7 +24,9 @@ class Commands : CmdClass{
     @Permission("dev.mikan.test",false)
     @Sender(User.CONSOLE)
     fun test2(cmd: AltairCMD,actor: Actor,string: Double){
-        actor.reply("<green>Received: $string")
+        actor.reply("<green>Complete: ${cmd.complete?.args?.get(0)}")
+        actor.reply("<green>Permission: ${cmd.permission?.permission}")
+        actor.reply("<green>Sender type: ${cmd.sender?.user}")
     }
 
     @Command("test mariobros")

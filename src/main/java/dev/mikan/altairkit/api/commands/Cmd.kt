@@ -44,11 +44,17 @@ class Cmd {
 
                 // load subcommands and cache
                 val tokens = commandAnnotation.cmd.split(" ")
-                logger.info { "Tokens: $tokens" }
                 val cmdTree = cache[tokens[0]]?: Tree()
                 for (i in tokens.indices) {
                     val cmdString = tokens[i]
-                    val cmd = AltairCMD(cmdString,cmdTree,if (i + 1 == tokens.size) method else null,instance,commandAnnotation,completeAnnotation,senderAnnotation,permissionAnnotation)
+                    val isLastToken= (i + 1 == tokens.size)
+                    val cmd = AltairCMD(cmdString,cmdTree,
+                        if (isLastToken) method else null,
+                        instance,
+                        if (isLastToken) commandAnnotation else null,
+                        if (isLastToken) completeAnnotation else null,
+                        if (isLastToken) senderAnnotation else null,
+                        if (isLastToken) permissionAnnotation else null)
 
                     val isRoot = i == 0
 
@@ -60,7 +66,6 @@ class Cmd {
                     } else if (isRoot) {
                         // Inner check since if it is root it still has to use continue
                         if (cmdTree.root == null) {
-                            logger.info { "Root: $cmd" }
                             cmdTree.setRoot(cmd)
                             getCommandMap().register(cmdString,cmd)
                         }
@@ -71,19 +76,10 @@ class Cmd {
 
                     val parentName = tokens[i - 1]
                     val parent = cmdTree.fetch { cmd -> cmd.name == parentName}
-                    logger.info { "Parent: $parent" }
-                    logger.info { "Cmd: $cmd" }
+
                     // Uses the condition passed by lambda to detect if there is an existing instance already
                     // without lambda it will do a raw check between instances with == operator
                     cmdTree.insert(parent!!,cmd) { inner -> inner.name == cmd.name }
-
-                    getCommandMap().register(cmdString,cmd)
-
-                    if (i + 1 == tokens.size) {
-                        // Last iteration
-                        // Preventing index out of bound exception
-                        continue
-                    }
 
                 }
                 cache.putIfAbsent(cmdTree.root!!.data.name,cmdTree)

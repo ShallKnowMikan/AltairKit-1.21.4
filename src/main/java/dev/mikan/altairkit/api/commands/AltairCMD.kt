@@ -3,7 +3,6 @@ package dev.mikan.altairkit.api.commands
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToDouble
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToInt
 import dev.mikan.altairkit.api.commands.annotations.*
-import dev.mikan.altairkit.api.commands.Cmd
 import dev.mikan.altairkit.utils.Tree
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -32,6 +31,12 @@ class AltairCMD(
     ): Boolean {
         val params = mutableMapOf<KParameter, Any?>()
 
+        if (args.isNotEmpty() && tree.fetch { cmd -> cmd.name == args[0] } != null) {
+            val subCommand = tree.fetch { cmd -> cmd.name == args[0] }
+            subCommand?.execute(sender,args[0],args.copyOfRange(1,args.size))
+            return false
+        }
+
         val actor = when (sender) {
             is Player -> dev.mikan.altairkit.api.commands.actors.Player(sender, args.toList())
             is ConsoleCommandSender -> dev.mikan.altairkit.api.commands.actors.Console(sender, args.toList())
@@ -39,10 +44,7 @@ class AltairCMD(
                 return false
             }
         }
-
-        if (permission == null) return false
-        if (permission.blocking && !actor.hasPermission(permission.permission)) return false
-
+        if ((permission != null && permission.blocking) || (permission != null && !actor.hasPermission(permission.permission))) return false
         when (this.sender?.user) {
             null -> return false
             User.CONSOLE -> if (!actor.isConsole()) return false
@@ -51,12 +53,6 @@ class AltairCMD(
         }
 
 
-
-        if (args.isNotEmpty() && tree.fetch { cmd -> cmd.name == args[0] } != null) {
-            val subCommand = tree.fetch { cmd -> cmd.name == args[0] }
-            subCommand?.execute(sender,args[0],args.copyOfRange(1,args.size))
-            return false
-        }
 
         if (onPerform == null) return false
 
@@ -84,14 +80,14 @@ class AltairCMD(
             when (param.type.classifier) {
                 Player::class -> params[param] = try {
                     Bukkit.getPlayer(args[onPerform!!.parameters.indexOf(param) - 3])
-                } catch (e: IndexOutOfBoundsException) { null }
+                } catch (_: IndexOutOfBoundsException) { null }
                 String::class -> params[param] = try {
                     args[onPerform!!.parameters.indexOf(param) - 3]
-                } catch (e: IndexOutOfBoundsException) { "" }
+                } catch (_: IndexOutOfBoundsException) { "" }
                 Int::class -> params[param] =  {
                     val arg = try {
                         args[onPerform!!.parameters.indexOf(param) - 3]
-                    } catch (e: IndexOutOfBoundsException) { "-1" }
+                    } catch (_: IndexOutOfBoundsException) { "-1" }
                     params[param] = when {
                         arg.isParsableToInt() -> arg.toInt()
                         else -> -1
@@ -100,7 +96,7 @@ class AltairCMD(
                 Double::class -> {
                     val arg = try {
                         args[onPerform!!.parameters.indexOf(param) - 3]
-                    } catch (e: IndexOutOfBoundsException) { "-1" }
+                    } catch (_: IndexOutOfBoundsException) { "-1" }
                     params[param] = when {
                         arg.isParsableToDouble() -> arg.toDouble()
                         arg.isParsableToInt() -> arg.toInt().toDouble()
@@ -117,32 +113,38 @@ class AltairCMD(
 
     override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
 
-//        val possibleCommands = tree.filter { node -> node.data.name.startsWith(args.getOrElse(0){""}) }
-        val logger = Bukkit.getLogger()
-        logger.info { "Args: $args" }
-        val node = tree.search(this)
-        node?: super.tabComplete(sender, alias, args)
-        val possibleCommands = node!!.children.filter { node -> node.data.name.startsWith(args.getOrElse(0){""}) }
+        // Trying to get last subcommand written, but if space after the command last argument will be ""
+        // So I need to get the n - 2 one
 
+        // This block returns all successive subcommands starting from first child of root
+        if (args.size > 1) {
+            tree.fetch { cmd -> cmd.name == args[args.size - 2]}?.let {
+                // Remember to use cmd here to refer to AltairKit current instance !!
+                cmd ->
+                val completions = mutableListOf<String>()
+                tree.search(cmd)?.children?.forEach { child -> completions.add(child.data.name) }
 
+                return completions.ifEmpty {
+                    return if (cmd.complete == null || cmd.complete.args.isEmpty()) super.tabComplete(sender, alias, args)
+                    else cmd.complete.args.toList()
+                }
+            }
+        }
 
-        val possibleCmdList = mutableListOf<String>()
-        possibleCommands.forEach { node -> possibleCmdList.add(node.data.name) }
-        logger.info { "Possible commands: $possibleCommands" }
-        return possibleCmdList
+        // Returns first subcommands from root
+        if (args.size == 1) {
+            val node = tree.search(this)
+            node?: super.tabComplete(sender, alias, args)
+            val possibleCommands = node!!.children.filter { node -> node.data.name.startsWith(args.getOrElse(0){""}) }
 
+            val possibleCmdList = mutableListOf<String>()
+            possibleCommands.forEach { node -> possibleCmdList.add(node.data.name) }
+            return possibleCmdList
+        }
+
+        return super.tabComplete(sender, alias, args)
     }
 
-
-
-//    fun findBestMatch(string: String) : String {
-//        val subcommands = Cmd.cache[this.name]?.sea
-//        return (subcommands.find { it.startsWith(string) }).orEmpty()
-//    }
-
-    fun findBestMatch(string: String,collection: List<String>) : String? {
-        return collection.find { it.startsWith(string) }
-    }
 
     override fun toString(): String {
         return this.name

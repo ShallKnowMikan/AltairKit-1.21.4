@@ -49,7 +49,22 @@ class Tree<T> {
         return search(value)?.data
     }
 
+    fun values() : Set<T>{
+        val set = mutableSetOf<T>()
+        root?: return set
 
+        val stack = ArrayDeque<Node<T>>()
+        stack.addLast(root!!)
+
+        while (stack.isNotEmpty()) {
+            val node = stack.removeFirst()
+            set.add(node.data)
+            for (child in node.children) {
+                stack.addLast(child)
+            }
+        }
+        return set
+    }
 
     fun isLeaf(value:T) : Boolean {
         return search(value)?.children!!.isEmpty()
