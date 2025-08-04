@@ -57,36 +57,35 @@ class AltairCMD(
         if (onPerform == null) return false
 
         /*
-        * Since param 1, 2 and 3 in the method will always be
-        * this.instance, AltairCMD and Actor in this for loop you will
-        * always be sure that i - 3 won't cause exceptions
+        * Since param 1 and 2 in the method will always be
+        * this.instance and Actor in this for loop you will
+        * always be sure that i - 2 won't cause exceptions
         * */
 
         params[onPerform!!.parameters[0]] = instance
-        params[onPerform!!.parameters[1]] = this
-        params[onPerform!!.parameters[2]] = actor
+        params[onPerform!!.parameters[1]] = actor
 
         /*
         * Wrong parameters will bring to null values, -1
         * or empty strings
-        * if the method requires 3 parameters and only 2
-        * have been passed then the last will enter the
-        * catch for index out of bounds (args - 3 = invalid index)
+        * if the method requires 2 parameters and only 1
+        * has been passed then the last will enter the
+        * catch for index out of bounds (args - 2 = invalid index)
         * */
 
         for (i in onPerform!!.parameters.indices) {
-            if (i < 3) continue
+            if (i < 2) continue
             val param = onPerform!!.parameters[i]
             when (param.type.classifier) {
                 Player::class -> params[param] = try {
-                    Bukkit.getPlayer(args[onPerform!!.parameters.indexOf(param) - 3])
+                    Bukkit.getPlayer(args[onPerform!!.parameters.indexOf(param) - 2])
                 } catch (_: IndexOutOfBoundsException) { null }
                 String::class -> params[param] = try {
-                    args[onPerform!!.parameters.indexOf(param) - 3]
+                    args[onPerform!!.parameters.indexOf(param) - 2]
                 } catch (_: IndexOutOfBoundsException) { "" }
                 Int::class -> params[param] =  {
                     val arg = try {
-                        args[onPerform!!.parameters.indexOf(param) - 3]
+                        args[onPerform!!.parameters.indexOf(param) - 2]
                     } catch (_: IndexOutOfBoundsException) { "-1" }
                     params[param] = when {
                         arg.isParsableToInt() -> arg.toInt()
@@ -95,7 +94,7 @@ class AltairCMD(
                 }
                 Double::class -> {
                     val arg = try {
-                        args[onPerform!!.parameters.indexOf(param) - 3]
+                        args[onPerform!!.parameters.indexOf(param) - 2]
                     } catch (_: IndexOutOfBoundsException) { "-1" }
                     params[param] = when {
                         arg.isParsableToDouble() -> arg.toDouble()
