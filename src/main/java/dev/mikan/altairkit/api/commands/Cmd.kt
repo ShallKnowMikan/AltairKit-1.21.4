@@ -32,7 +32,7 @@ class Cmd {
 
                 val commandAnnotation = method.findAnnotation<Command>()
 
-                if (commandAnnotation?.cmd == null || commandAnnotation.cmd.isEmpty()) continue
+                if (commandAnnotation?.value == null || commandAnnotation.value.isEmpty()) continue
 
 
                 val completeAnnotation = method.findAnnotation<Complete>()
@@ -43,7 +43,7 @@ class Cmd {
 
 
                 // load subcommands and cache
-                val tokens = commandAnnotation.cmd.split(" ")
+                val tokens = commandAnnotation.value.split(" ")
                 val cmdTree = cache[tokens[0]]?: Tree()
                 for (i in tokens.indices) {
                     val cmdString = tokens[i]

@@ -2,4 +2,4 @@ package dev.mikan.altairkit.api.commands.annotations
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Sender(val user: User)
+annotation class Sender(val value: User)
