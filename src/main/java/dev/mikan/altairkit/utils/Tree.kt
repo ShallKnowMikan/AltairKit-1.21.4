@@ -156,27 +156,83 @@ class Tree<T> {
         if (root == null) return "empty"
 
         val stringBuilder = StringBuilder()
-        buildTreeString(root, stringBuilder, 0)
-        return stringBuilder.toString()
-    }
-
-    private fun buildTreeString(node: Node<T>?, builder: StringBuilder, depth: Int) {
-        if (node == null) return
-
-        // Aggiunge indentazione in base alla profondità
-        repeat(depth) { builder.append("    ") }
-
-        // Aggiunge il nodo corrente e la sua profondità
-        builder.append("\n├── ")
-        builder.append(node.data.toString())
-        builder.append(" (depth: $depth)")
-        builder.append("\n")
-
-        // Aggiunge i figli ricorsivamente
-        node.children.forEach { child ->
-            buildTreeString(child, builder, depth + 1)
+//        buildTreeString(root, stringBuilder)
+        toStringDFS(root,stringBuilder)
+        stringBuilder.append("\n")
+        // Fixing string aesthetic └
+        val lastBranchIndex = stringBuilder.toString().lastIndexOf("├")
+        return if (lastBranchIndex != -1) {
+            stringBuilder.toString().substring(0, lastBranchIndex) + "└" + stringBuilder.toString().substring(lastBranchIndex + 1)
+        } else {
+            // If char looked for is not present
+            stringBuilder.toString()
         }
     }
+
+    /*
+    * Logically, to find the depth, for each node I just have to
+    * go up with .parent and check if it is null, root only have null
+    * parent
+    * */
+    private fun toStringBFS(node: Node<T>?, builder: StringBuilder) {
+        if (node == null) return
+
+        val stack = ArrayDeque<Node<T>>()
+
+        stack.addLast(node)
+        while (stack.isNotEmpty()) {
+
+            val current = stack.removeFirst()
+            // find depth
+            var depth = 0
+            var currentNode: Node<T>? = current
+            while (currentNode?.parent != null) {
+                depth++
+                currentNode = currentNode.parent
+            }
+
+            for (child in current.children) {
+                stack.addLast(child)
+            }
+            val gonnaExit = stack.isEmpty()
+            builder.append("\n│\n"+ (if (gonnaExit) "└" else "├") +"─────── Depth: $depth : $current ${if (gonnaExit) "\n" else ""}")
+        }
+
+    }
+
+    // DFS toString implementation
+
+    private fun toStringDFS(node:Node<T>?,builder: StringBuilder) {
+        if (node == null) return
+        val depth = findDepth(node)
+        val additionalLength = StringBuilder()
+        repeat(depth) { additionalLength.append("────") }
+        builder.append("\n│\n├───${additionalLength} Depth: $depth : $node ")
+        node.children.forEach { child ->
+            toStringDFSRecursive(child,builder)
+        }
+    }
+
+    private fun findDepth(node: Node<T>) :Int {
+        var current:Node<T>? = node
+        var depth = 0
+        while (current?.parent != null) {
+            depth ++
+            current = current.parent
+        }
+        return depth
+    }
+
+    private fun toStringDFSRecursive(node: Node<T>,builder: StringBuilder) {
+        val depth = findDepth(node)
+        val additionalLength = StringBuilder()
+        repeat(depth) { additionalLength.append("────") }
+        builder.append("\n│\n├───${additionalLength} Depth: $depth : $node ")
+        node.children.forEach { child ->
+            toStringDFSRecursive(child,builder)
+        }
+    }
+
 
     inner class Node<T> {
         var data: T
