@@ -190,3 +190,32 @@ new Time(2, 30, 45)
 Time t = new Time(1, 20, 0)
 println(t.toString()) // "01h 20m 00s"
 ```
+
+## AltairKit - Event
+This abstract class simplifies the creation of custom Spigot events. It implements Cancellable and provides a built-in handler list.
+
+### Features
+
+- Extends `org.bukkit.event.Event`
+- Implements `Cancellable`
+- Adds a `run()` abstract method to execute event logic
+- Custom cancellation logic
+
+### Usage
+```java
+public class MyEvent extends dev.mikan.altairkit.utils.Event {
+
+    @Override
+    public void run() {
+        if (isCancelled()) return;
+        // custom logic here
+    }
+}
+
+// Usage
+MyEvent event = new MyEvent();
+Bukkit.getPluginManager().callEvent(event);
+event.run();
+```
+Make sure to check if (isCancelled()) at the beginning of run().
+
