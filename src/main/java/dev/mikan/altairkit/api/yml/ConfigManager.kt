@@ -9,13 +9,13 @@ import java.io.InputStream
 import java.io.OutputStream
 import kotlin.jvm.Throws
 
-object ConfigManager {
+class ConfigManager {
 
-    lateinit var folder: File
-    lateinit var plugin: Plugin
+    private var folder: File
+    private var plugin: Plugin
     private val fileMap: MutableMap<String, FileConfiguration> = mutableMapOf()
 
-    fun init(plugin: Plugin) {
+    constructor(plugin: Plugin) {
         this.plugin = plugin
         this.folder = plugin.dataFolder
         loadFolder()
@@ -32,7 +32,7 @@ object ConfigManager {
     * it will create it
     * */
     @Throws(IOException::class)
-    fun load(filePath: String) {
+    fun load(filePath: String) : ConfigManager {
         var path = filePath
 
         if (!path.endsWith(".yml"))
@@ -42,7 +42,7 @@ object ConfigManager {
         require(source != null) {"Invalid source for path: $path, check your files."}
         val file = File(folder,filePath)
 
-        if (file.exists()) return
+        if (file.exists()) return this
 
         file.mkdirs()
         file.createNewFile()
@@ -51,6 +51,7 @@ object ConfigManager {
         val config = YamlConfiguration.loadConfiguration(file);
         fileMap.put(path,config)
 
+        return this
     }
 
 

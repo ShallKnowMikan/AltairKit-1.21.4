@@ -2,6 +2,7 @@ package dev.mikan.altairkit
 
 import dev.mikan.altairkit.test.Commands
 import dev.mikan.altairkit.api.commands.Cmd
+import dev.mikan.altairkit.api.commands.CmdClass
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
@@ -21,7 +22,7 @@ class AltairKit : JavaPlugin() {
     override fun onEnable() {
         // Testing only
 
-        Cmd.registerCommands(Commands())
+        AltairKit.registerCommands()
 
     }
 
@@ -64,6 +65,10 @@ class AltairKit : JavaPlugin() {
             return skull
         }
 
+        @JvmStatic
+        fun registerCommands(instance: CmdClass){
+            Cmd.registerCommands(instance)
+        }
 
         @JvmStatic
         fun colorize(s: String): String {
