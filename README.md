@@ -21,7 +21,7 @@ This project is meant to simplify Minecraft plugin development.
 ```
 ### Gradle (.kts)
 ```kotlin
-implementation("dev.mikan:AltairKit:1.21.4"
+implementation("dev.mikan:AltairKit:1.21.4")
 ```
 ## Commands
 Commands API allows you to create commands in the easiest way, by using `annotations`.
@@ -71,10 +71,12 @@ public void altair(final Actor actor, double number, String message) {
 }
 ```
 If the user does not pass those arguments, the defaults are:
-- `Player`: `null`
-- `int`: `-1`
-- `double`: `-1.0`
-- `String`: `""`
+| invalid input | return value |
+|---------------|--------------|
+|`Player`       |    `null`    |
+| `int`         |    `-1`      |
+| `double`      |    `-1.0`    |
+| `String`      |     `""`     |
 
 ### @Default annotation
 ```java
