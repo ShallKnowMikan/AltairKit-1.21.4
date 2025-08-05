@@ -89,3 +89,33 @@ public void altair(final Actor actor, @Default Player target, String message) {
 In this case, if the player is passed as parameter, it behaves normally.
 If not, and the command is called like `/altair Hi!`,
 then `target` will automatically be filled with the sender instance.
+
+## ConfigManager
+Its purpose is to make it easy to create and load yml files.
+
+It has 2 main method: `load()` and `get()`
+
+### Usage
+```java
+  final ConfigManager manager = new ConfigManager(plugin);
+        
+  manager.load("config.yml");
+        
+  final FileConfiguration config = manager.get("config.yml");
+```
+`Important!` Try to use just one instance and get it with getters around the project
+
+#### load:
+Generates the file from the name you passed as parameter. It generates comments contained in the file as well.
+If there was no directories or plugin folder they'll be automatically created 
+
+#### get
+Once the file is loaded it is possible to retrieve its FileConfiguration object with this method.
+`Watch out!!` Before using get you must have loaded that file with `ConfigManager#load(<name>)`.
+
+It is also possible to combine the 2 method together:
+```java
+  final ConfigManager manager = new ConfigManager(plugin);
+        
+  final FileConfiguration config = manager.load("config.yml").get("config.yml");
+```
