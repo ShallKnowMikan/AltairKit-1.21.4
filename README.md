@@ -219,3 +219,112 @@ event.run();
 ```
 Make sure to check if (isCancelled()) at the beginning of run().
 
+## AltairKit - Module
+This class defines a reusable module structure for Spigot plugins. It helps split plugin logic into manageable components. Useful in bigger projects.
+
+### Features
+
+- Manages plugin reference and logger
+- Stores and registers event listeners
+- Provides utility logging methods: `info()`, `warning()`, `error()`
+- Contains lifecycle hooks:
+  - `onEnable()`
+  - `onReload()`
+  - `onDisable()`
+  - `loadConfig()`
+  - `registerCommands()`
+  - `registerListeners()`
+ 
+### Usage 
+```java
+public class ExampleModule extends dev.mikan.altairkit.utils.Module {
+
+    public ExampleModule(Plugin plugin) {
+        super(plugin, "ExampleModule");
+    }
+
+    @Override
+    public void onEnable() {
+        loadConfig();
+        registerCommands();
+        registerListeners();
+        info("Module enabled!");
+    }
+
+    @Override
+    public void loadConfig() {
+        // Load config here
+    }
+
+    @Override
+    public void registerCommands() {
+        // Register commands
+    }
+
+    @Override
+    public void registerListeners() {
+        this.listeners = Set.of(new MyListener());
+        listen();
+    }
+
+    @Override
+    public void onReload() {}
+
+    @Override
+    public void onDisable() {}
+}
+```
+Use `listen()` to automatically register all listeners stored in this.listeners.
+
+## AltairKit - Tree
+Tree<T> is a generic tree data structure with support for dynamic insertion, deletion, searching, and traversal (DFS/BFS).
+
+### Features
+- Set or define root node
+- Insert nodes (with or without custom conditions)
+- Search or fetch nodes by value or condition
+- Remove nodes
+- Filter nodes
+- Check if a node is a leaf
+- Generate a string-based tree visualization with depth info
+
+### Usage
+```java
+Tree<String> tree = new Tree<>();
+tree.setRoot("root");
+tree.insert("root", "child1");
+tree.insert("root", "child2");
+tree.insert("child1", "subchild");
+
+System.out.println(tree.contains("child2")); // true
+System.out.println(tree.isLeaf("child2"));    // true
+System.out.println(tree.toString());          // Tree representation
+```
+### Methods overview
+
+| Method                          | Description |
+|---------------------------------|-------------|
+| `setRoot(value)`                | Sets the root node |
+| `insert(parent, value)`         | Adds a new node under a parent |
+| `insert(parent, value, fetchCondition)` | Inserts with condition |
+| `search(value)`                 | Returns the node matching the value |
+| `get(value)`                    | Gets the value from a node |
+| `contains(value)`               | Checks if the value exists |
+| `isLeaf(value)`                 | Returns true if node has no children |
+| `remove(value)`                 | Removes a node |
+| `values()`                      | Returns all values in the tree |
+| `filter(condition)`             | Filters and returns nodes that pass a condition |
+| `fetch(condition)`              | Returns the first value that matches a condition |
+| `toString()`                    | Text-based visual representation of the tree |
+
+### toString example
+```
+│
+├─── Depth: 0 : root 
+│
+├──────── Depth: 1 : child1 
+│
+├──────────── Depth: 2 : subchild 
+│
+└──────── Depth: 1 : child2 
+```
