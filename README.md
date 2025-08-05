@@ -97,11 +97,11 @@ It has 2 main method: `load()` and `get()`
 
 ### Usage
 ```java
-  final ConfigManager manager = new ConfigManager(plugin);
+final ConfigManager manager = new ConfigManager(plugin);
         
-  manager.load("config.yml");
+manager.load("config.yml");
         
-  final FileConfiguration config = manager.get("config.yml");
+final FileConfiguration config = manager.get("config.yml");
 ```
 `Important!` Try to use just one instance and get it with getters around the project
 
@@ -115,7 +115,78 @@ Once the file is loaded it is possible to retrieve its FileConfiguration object 
 
 It is also possible to combine the 2 method together:
 ```java
-  final ConfigManager manager = new ConfigManager(plugin);
+final ConfigManager manager = new ConfigManager(plugin);
         
-  final FileConfiguration config = manager.load("config.yml").get("config.yml");
+final FileConfiguration config = manager.load("config.yml").get("config.yml");
+```
+
+## AltairKit - Time Utilities
+This module provides a set of utility classes to manage and manipulate date and time values in a simple and readable format. It includes parsing, formatting, adding time, and calculating time differences between two dates.
+
+### TimeUtils
+A utility class that offers methods to:
+- Get the current time (`current`)
+- Add time to an existing `DateTime` (`add`)
+- Calculate the time left between two `DateTime` instances (`timeLeft`)
+
+#### Usage
+```java
+val utils = TimeUtils()
+
+// Get the current date-time
+val now = utils.current()
+
+// Add 2 days and 3 hours to the current time
+val future = utils.add(now, year = 0, month = 0, day = 2, hour = 3, minute = 0, second = 0)
+
+// Calculate time left between two DateTime objects
+val left = utils.timeLeft(now, future)
+println(left.toString()) // Example: 51h 00m 00s
+```
+All dates are handled using the Europe/Rome timezone and formatted as dd/MM/yyyy HH:mm:ss.
+
+### DateTime
+A custom data structure to represent a full date and time, parsed from a `String`.
+
+#### instantiation
+```java
+  new DateTime("05/08/2025 14:30:15")
+```
+
+#### Properties
+- `day`, `month`, `year`: Parsed from the date string
+- `time`: A Time object with hours, minutes, and seconds
+- `valid`: Indicates whether the string was parsed successfully.
+
+#### Notes
+- The input string must follow the format: `"dd/MM/yyyy HH:mm:ss"`.
+- If the input is invalid or empty, the object is marked as `valid = false`.
+#### Example
+```java
+val date = DateTime("01/01/2025 12:00:00")
+  
+if (date.valid) {
+  println("Year: ${date.year}")
+  println("Time: ${date.time}")
+}
+```
+
+### Time
+A class representing a duration or clock time.
+
+#### Instantiation
+```java
+// 2 hours, 30 minutes, 45 seconds
+new Time(2, 30, 45) 
+```
+
+#### Properties 
+- `hours`, `minutes`, `seconds`: Basic time units.
+- `valid`: true if all values are non-negative.
+- `zero`: true if all units are zero.
+
+#### Example
+```java
+Time t = new Time(1, 20, 0)
+println(t.toString()) // "01h 20m 00s"
 ```
