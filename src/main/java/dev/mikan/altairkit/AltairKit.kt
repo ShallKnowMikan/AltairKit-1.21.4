@@ -22,8 +22,6 @@ class AltairKit : JavaPlugin() {
     override fun onEnable() {
         // Testing only
 
-        AltairKit.registerCommands()
-
     }
 
 
