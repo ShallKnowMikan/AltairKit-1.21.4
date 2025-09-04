@@ -42,11 +42,15 @@ class ConfigManager {
         require(source != null) {"Invalid source for path: $path, check your files."}
         val file = File(folder,filePath)
 
-        if (file.exists()) return this
-
-        file.mkdirs()
-        file.createNewFile()
-        copyInputStreamToFile(source,file)
+        if (file.exists()) {
+            if (file.isDirectory) {
+                throw IOException("Expected a file but found a directory: $file")
+            }
+        } else {
+            file.parentFile.mkdirs()
+            file.createNewFile()
+            copyInputStreamToFile(source, file)
+        }
 
         val config = YamlConfiguration.loadConfiguration(file);
         fileMap.put(path,config)
@@ -91,16 +95,17 @@ class ConfigManager {
     private fun copyLarge(inputStream: InputStream,  outputStream: OutputStream): Long = copy(inputStream, outputStream, 8192)
 
 
-    private fun copyLarge(inputStream: InputStream,  outputStream: OutputStream, buffer: ByteArray): Long {
+    private fun copyLarge(inputStream: InputStream, outputStream: OutputStream, buffer: ByteArray): Long {
         var count: Long = 0
-        var n = 0
-        while (-1 != n) {
-            n = inputStream.read(buffer)
-            count += n.toLong()
+        while (true) {
+            val n = inputStream.read(buffer)
+            if (n == -1) break
             outputStream.write(buffer, 0, n)
+            count += n.toLong()
         }
-        return count;
+        return count
     }
+
 
 
     private fun copy( inputStream: InputStream,  outputStream: OutputStream,  bufferSize: Int): Long {

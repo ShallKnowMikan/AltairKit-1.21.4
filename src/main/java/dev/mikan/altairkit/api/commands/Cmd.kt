@@ -84,7 +84,6 @@ class Cmd {
                 }
                 cache.putIfAbsent(cmdTree.root!!.data.name,cmdTree)
             }
-            logger.info("Registered commands: ${cache.values}")
         }
 
 
@@ -100,6 +99,23 @@ class Cmd {
             } catch (e: Exception) {
                 throw RuntimeException("Unable to access the command map from Bukkit server.", e)
             }
+        }
+
+        /*
+        * Will return the first match with the name.
+        * If tree contains a cmd with the same name
+        * the returned instance might be wrong.
+        *
+        * TODO: add an id to commands in order to recognize them by id
+        * */
+        @JvmStatic
+        fun getCMD(rootName: String,cmdName: String): AltairCMD? {
+            val tree = cache[rootName]
+            tree?.let { tree ->
+                return tree.fetch { cmd -> cmd.name == cmdName }
+            }
+
+            return null
         }
     }
 

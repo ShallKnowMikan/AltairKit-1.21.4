@@ -3,6 +3,7 @@ package dev.mikan.altairkit.api.commands
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToDouble
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToInt
 import dev.mikan.altairkit.api.commands.annotations.*
+import dev.mikan.altairkit.utils.Logger
 import dev.mikan.altairkit.utils.Tree
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -10,6 +11,7 @@ import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
 import java.lang.IndexOutOfBoundsException
+import java.util.Arrays
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.hasAnnotation
@@ -23,7 +25,13 @@ class AltairCMD(
     val complete: Complete? = null,
     val sender: Sender? = null,
     val permission: Permission? = null,
+    val completions: MutableList<String> = mutableListOf()
 ) : BukkitCommand(name) {
+
+    init {
+        if (complete != null)
+            completions.addAll(complete.value)
+    }
 
     override fun execute(
         sender: CommandSender,
@@ -118,7 +126,6 @@ class AltairCMD(
 
             val argIndex = onPerform!!.parameters.indexOf(param) - paramsOffset
 
-
             when (param.type.classifier) {
                 Player::class -> params[param] =  try {
                     val player = Bukkit.getPlayer(args[argIndex])
@@ -137,30 +144,24 @@ class AltairCMD(
                 String::class -> params[param] = try {
                     args[argIndex]
                 } catch (_: IndexOutOfBoundsException) { "" }
-                Int::class -> params[param] =  {
+                Int::class -> {
                     val arg = try {
                         args[argIndex]
                     } catch (_: IndexOutOfBoundsException) { "-1" }
-                    params[param] = when {
-                        arg.isParsableToInt() -> arg.toInt()
-                        else -> -1
-                    }
+                    params[param] = if (arg.isParsableToInt()) arg.toInt() else -1
                 }
                 Double::class -> {
                     val arg = try {
                         args[argIndex]
                     } catch (_: IndexOutOfBoundsException) { "-1" }
-                    params[param] = when {
-                        arg.isParsableToDouble() -> arg.toDouble()
-                        arg.isParsableToInt() -> arg.toInt().toDouble()
-                        else -> -1.0
-                    }
+                    params[param] = if (arg.isParsableToDouble()) arg.toDouble()
+                    else if (arg.isParsableToInt()) arg.toInt()
+                    else -1.0
 
                 }
             }
 
         }
-
         onPerform!!.callBy(params)
         return true
     }
@@ -179,8 +180,8 @@ class AltairCMD(
                 tree.search(cmd)?.children?.forEach { child -> completions.add(child.data.name) }
 
                 return completions.ifEmpty {
-                    return if (cmd.complete == null || cmd.complete.value.isEmpty()) super.tabComplete(sender, alias, args)
-                    else cmd.complete.value.toList()
+                    return if (cmd.completions.isEmpty()) super.tabComplete(sender, alias, args)
+                    else cmd.completions
                 }
             }
         }
@@ -194,8 +195,8 @@ class AltairCMD(
             val possibleCmdList = mutableListOf<String>()
             possibleCommands.forEach { node -> possibleCmdList.add(node.data.name) }
             return possibleCmdList.ifEmpty {
-                if (this.complete == null) return super.tabComplete(sender, alias, args)
-                return this.complete.value.toList().ifEmpty { super.tabComplete(sender, alias, args) }
+                if (this.completions.isEmpty()) return super.tabComplete(sender, alias, args)
+                return this.completions
             }
         }
 

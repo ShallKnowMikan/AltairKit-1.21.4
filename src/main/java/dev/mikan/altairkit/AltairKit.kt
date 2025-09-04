@@ -1,16 +1,20 @@
 package dev.mikan.altairkit
 
-import dev.mikan.altairkit.test.Commands
+import dev.mikan.altairkit.api.commands.AltairCMD
 import dev.mikan.altairkit.api.commands.Cmd
 import dev.mikan.altairkit.api.commands.CmdClass
+import dev.mikan.altairkit.utils.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
+import org.bukkit.persistence.PersistentDataType
+import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 import java.util.function.Consumer
@@ -69,10 +73,17 @@ class AltairKit : JavaPlugin() {
         }
 
         @JvmStatic
-        fun colorize(s: String): String {
-            return ChatColor.translateAlternateColorCodes('&', s)
+        fun addCompletions(cmd: AltairCMD?,list: List<String>) {
+            cmd?.completions?.addAll(list)
         }
 
+        @JvmStatic
+        fun colorize(s: String?): Component {
+            val msg = s?: ""
+            return ChatColor.translateAlternateColorCodes('&', msg).toMessage()
+        }
+
+        @JvmStatic
         fun colorize(lines: MutableList<String?>): MutableList<String?> {
             val colorizedList: MutableList<String?> = ArrayList<String?>()
             lines.forEach(Consumer { line: String? ->
@@ -99,6 +110,10 @@ class AltairKit : JavaPlugin() {
         }
 
         val miniMessage = MiniMessage.builder().build()
-        fun String.colorize(): Component = miniMessage.deserialize(this)
+        fun String.toMessage(): Component {
+            return miniMessage.deserialize(this)
+        }
     }
+
+
 }

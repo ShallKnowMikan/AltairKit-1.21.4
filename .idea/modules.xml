@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Altair.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Altair.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Altair.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Altair.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AltairKit.main.iml" filepath="$PROJECT_DIR$/.idea/modules/AltairKit.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AltairKit.test.iml" filepath="$PROJECT_DIR$/.idea/modules/AltairKit.test.iml" />
     </modules>
   </component>
 </project>

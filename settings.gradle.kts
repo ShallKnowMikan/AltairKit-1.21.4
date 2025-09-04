@@ -3,10 +3,10 @@ pluginManagement {
         kotlin("jvm") version "2.2.0"
     }
 }
-rootProject.name = "Altair"
+rootProject.name = "AltairKit"
 gradle.rootProject{
     extra["updateRepo"] = true
-    extra["copy"] = true
+    extra["copy"] = false
     extra["outputDir"] = "/home/mikan/Desktop/localhosts/kotlin/plugins/"
 }
 

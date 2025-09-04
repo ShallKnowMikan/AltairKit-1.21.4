@@ -16,7 +16,7 @@ interface Actor {
         for (arg in args) {
             msg = message.replaceFirst("\\{}",arg);
         }
-        this.sender.sendMessage(colorize(msg).colorize())
+        this.sender.sendMessage(colorize(msg))
     }
     fun isConsole() : Boolean
     fun asConsole() : ConsoleCommandSender?

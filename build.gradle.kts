@@ -18,14 +18,14 @@ tasks.register<Copy>("copy"){
 }
 
 tasks.register<Exec>("updateRepo"){
-    workingDir = file("/home/mikan/IdeaProjects/Altair/build/libs/")
+    workingDir = file("/home/mikan/IdeaProjects/AltairKit-1.21.4/build/libs/")
     commandLine(
         "/usr/bin/mvn",
         "install:install-file",
-        "-Dfile=Altair-test.jar",
+        "-Dfile=AltairKit-1.21.4.jar",
         "-DgroupId=dev.mikan",
         "-DartifactId=AltairKit",
-        "-Dversion=test",
+        "-Dversion=1.21.4",
         "-Dpackaging=jar"
     )}
 
