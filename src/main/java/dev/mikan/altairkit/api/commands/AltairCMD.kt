@@ -121,12 +121,9 @@ class AltairCMD(
             argsPointer ++
         }
 
-//        Logger.warning(" Param values til now: ${params.values} | argIndex: $argsPointer of ${arguments.size} | paramIndex: $paramsPointer of ${onPerform!!.parameters.size}")
 
 
         if (params.size < onPerform!!.parameters.size) {
-//            Logger.warning(" Adjusting params.")
-//            Logger.warning(" from: ${params.size} to ${onPerform!!.parameters.size}")
             for (i in params.size until onPerform!!.parameters.size) {
                 val param = onPerform!!.parameters[i]
                 Logger.warning(" Adjusting: ${param.type.classifier}")
@@ -140,7 +137,6 @@ class AltairCMD(
                     else -> null
                 }
             }
-//            Logger.warning(" adjusted params: ${params.values}")
         }
 
         onPerform!!.callBy(params)
