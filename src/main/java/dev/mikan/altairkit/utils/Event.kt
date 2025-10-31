@@ -20,15 +20,18 @@ abstract class Event : Event(), Cancellable{
 
     companion object {
         private val HANDLERS: HandlerList = HandlerList()
+
+        @JvmStatic
+        fun getHandlerList() : HandlerList {
+            return HANDLERS
+        }
     }
 
     override fun getHandlers(): HandlerList {
         return HANDLERS
     }
 
-    fun getHandlersList() : HandlerList {
-        return HANDLERS
-    }
+
 
     override fun isCancelled() : Boolean{
         return cancelled

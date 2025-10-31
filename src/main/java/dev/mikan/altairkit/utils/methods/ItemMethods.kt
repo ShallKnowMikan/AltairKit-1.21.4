@@ -1,4 +1,4 @@
-package dev.mikan.altairkit.utils
+package dev.mikan.altairkit.utils.methods
 
 import dev.mikan.altairkit.AltairKit
 import dev.mikan.altairkit.AltairKit.Companion.toMessage
@@ -15,7 +15,7 @@ object ItemMethods {
 
         val name = meta.displayName()?: return ""
 
-        return AltairKit.miniMessage.serialize(name)
+        return AltairKit.Companion.miniMessage.serialize(name)
     }
 
     fun ItemStack.getLore() : List<String> {
@@ -25,7 +25,7 @@ object ItemMethods {
 
         val list = mutableListOf<String>()
 
-        lore.forEach { line -> list.add(AltairKit.miniMessage.serialize(line)) }
+        lore.forEach { line -> list.add(AltairKit.Companion.miniMessage.serialize(line)) }
 
         return list
     }
@@ -37,7 +37,7 @@ object ItemMethods {
         return this
     }
 
-    fun ItemStack.setLore(lore: List<String>) : ItemStack{
+    fun ItemStack.setLore(lore: List<String>) : ItemStack {
         val toComponents = mutableListOf<Component>()
         lore.forEach { line -> toComponents.add(line.toMessage())}
         val meta = this.itemMeta
@@ -66,7 +66,7 @@ object ItemMethods {
         }
     }
 
-    fun ItemStack.setPersistentData(key: String, data: Any) {
+    fun ItemStack.setPersistentData(key: String, data: Any) : ItemStack {
         val namespacedKey = NamespacedKey.minecraft(key)
         val meta = this.itemMeta
         val container = meta.persistentDataContainer
@@ -82,6 +82,7 @@ object ItemMethods {
         }
 
         this.itemMeta = meta
+        return this
     }
 
     fun ItemStack.getPersistentData(key: String, type: PersistentDataType<*, *>): Any? {

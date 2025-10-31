@@ -1,5 +1,8 @@
 package dev.mikan.altairkit
 
+import com.destroystokyo.paper.profile.ProfileProperty
+import com.mojang.authlib.GameProfile
+import com.mojang.authlib.properties.Property
 import dev.mikan.altairkit.api.commands.AltairCMD
 import dev.mikan.altairkit.api.commands.Cmd
 import dev.mikan.altairkit.api.commands.CmdClass
@@ -10,14 +13,18 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.entity.Entity
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.util.BoundingBox
 import java.util.*
 import java.util.function.Consumer
+import kotlin.collections.toSet
 
 
 class AltairKit : JavaPlugin() {
@@ -95,6 +102,37 @@ class AltairKit : JavaPlugin() {
                 )
             })
             return colorizedList
+        }
+
+        @JvmStatic
+        fun skullFromBase64(base64: String): ItemStack {
+            val head = ItemStack(Material.PLAYER_HEAD)
+            val meta = head.itemMeta as SkullMeta
+
+            val profile = Bukkit.createProfile(UUID.randomUUID(), "AltairHead")
+            profile.setProperty(ProfileProperty("textures",base64))
+
+            meta.playerProfile = profile
+            head.itemMeta = meta
+            return head
+        }
+
+
+        @JvmStatic
+        fun nearby(entity: Entity, radius: Double) : Set<LivingEntity> {
+            val box: BoundingBox = entity.boundingBox.expand(radius)
+
+            // Gets all the living entities in box of given range
+            val nearby: MutableCollection<LivingEntity> = entity.world.getNearbyEntities(
+                box
+            ) { e -> e != null && e is LivingEntity }.stream()
+                .map { e -> e as LivingEntity }
+                .toList()
+
+            // filters all the null instances and entities not in spherical range
+            nearby.stream().filter { e -> e != null && e.location.distance(entity.location) <= radius }.toList()
+
+            return nearby.toSet()
         }
 
         fun String.isNumeric(): Boolean {

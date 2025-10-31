@@ -1,32 +1,30 @@
 package dev.mikan.altairkit.utils
 
 import org.bukkit.Color
-
 object Colors {
 
     fun fromHSL(hue: Float, saturation: Float, lightness: Float): Color {
-        // Normalizzazione dei valori
-        val normalizedHue = hue.mod(360f).let { if (it < 0) it + 360 else it }
-        val normalizedSaturation = saturation.coerceIn(0f, 1f)
-        val normalizedLightness = lightness.coerceIn(0f, 1f)
+        val h = (hue % 360 + 360) % 360
+        val s = (saturation / 100f).coerceIn(0f, 1f)
+        val l = (lightness / 100f).coerceIn(0f, 1f)
 
-        val c = (1 - kotlin.math.abs(2 * normalizedLightness - 1)) * normalizedSaturation
-        val x = c * (1 - kotlin.math.abs((normalizedHue / 60).mod(2F) - 1))
-        val m = normalizedLightness - c / 2
+        val c = (1 - kotlin.math.abs(2 * l - 1)) * s
+        val x = c * (1 - kotlin.math.abs((h / 60f) % 2 - 1))
+        val m = l - c / 2
 
-        val (r, g, b) = when {
-            normalizedHue < 60 -> Triple(c, x, 0f)
-            normalizedHue < 120 -> Triple(x, c, 0f)
-            normalizedHue < 180 -> Triple(0f, c, x)
-            normalizedHue < 240 -> Triple(0f, x, c)
-            normalizedHue < 300 -> Triple(x, 0f, c)
+        val (r1, g1, b1) = when {
+            h < 60 -> Triple(c, x, 0f)
+            h < 120 -> Triple(x, c, 0f)
+            h < 180 -> Triple(0f, c, x)
+            h < 240 -> Triple(0f, x, c)
+            h < 300 -> Triple(x, 0f, c)
             else -> Triple(c, 0f, x)
         }
 
-        return Color.fromRGB(
-            ((r + m) * 255).toInt(),
-            ((g + m) * 255).toInt(),
-            ((b + m) * 255).toInt()
-        )
+        val r = ((r1 + m) * 255).toInt().coerceIn(0, 255)
+        val g = ((g1 + m) * 255).toInt().coerceIn(0, 255)
+        val b = ((b1 + m) * 255).toInt().coerceIn(0, 255)
+
+        return Color.fromRGB(r, g, b)
     }
 }

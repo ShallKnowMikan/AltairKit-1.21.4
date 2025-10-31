@@ -1,6 +1,9 @@
+import org.gradle.api.internal.artifacts.dependencies.DefaultImmutableVersionConstraint.strictly
+
 plugins {
     id("java")
     id ("com.gradleup.shadow") version "8.3.0"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.18"
     kotlin("jvm") version "1.9.22"
 }
 
@@ -15,6 +18,13 @@ tasks.register<Copy>("copy"){
     dependsOn(tasks.named("jar"))
     from(tasks.named("jar").get().outputs.files)
     into(outputDir)
+}
+tasks.register("debugPaperweight") {
+    doLast {
+        val files = configurations.named("paperweightDevelopmentBundle").get().files
+        println("Files in paperweightDevelopmentBundle:")
+        files.forEach { println(" - ${it.absolutePath}") }
+    }
 }
 
 tasks.register<Exec>("updateRepo"){
@@ -45,22 +55,13 @@ java {
 
 repositories {
     mavenCentral()
-    mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven {
-        url = uri("https://repo.papermc.io/repository/maven-public/")
-    }
-    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
 
-    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
-    maven {
-        name = "sonatype"
-        url = uri("https://oss.sonatype.org/content/groups/public/")
-    }
+
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
 
     compileOnly(kotlin("stdlib-jdk8"))
     compileOnly(kotlin("reflect"))
@@ -71,6 +72,7 @@ dependencies {
 
 tasks.named("build"){
     dependsOn(tasks.named("shadowJar"))
+    finalizedBy("debugPaperweight")
     if (copyBoolean)
         finalizedBy("copy")
 

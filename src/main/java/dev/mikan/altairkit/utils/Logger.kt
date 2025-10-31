@@ -10,11 +10,11 @@ object Logger {
     }
 
     fun warning(message: String) {
-        Bukkit.getConsoleSender().sendMessage { "<yellow>$message".toMessage() }
+        Bukkit.getConsoleSender().sendMessage { "<yellow><bold>[Warning]</bold>$message".toMessage() }
     }
 
     fun error(message: String) {
-        Bukkit.getConsoleSender().sendMessage { "<red>$message".toMessage() }
+        Bukkit.getConsoleSender().sendMessage { "<red><bold>[Error]</bold>$message".toMessage() }
     }
 
 }
