@@ -84,10 +84,9 @@ class AltairCMD(
         * then, if are required more parameters than provided args, it will
         * automatically set the remaining params with one of those: null | "" | -1
         * */
-
         while (argsPointer < arguments.size && paramsPointer < onPerform!!.parameters.size) {
             val param = onPerform!!.parameters[paramsPointer]
-            when (onPerform!!.parameters[paramsPointer]) {
+            when (param.type.classifier) {
                 Player::class -> {
                     val player = Bukkit.getPlayer(arguments[argsPointer])
                     if (player == null && param.hasAnnotation<Default>() && actor.isPlayer()) {
@@ -126,7 +125,6 @@ class AltairCMD(
         if (params.size < onPerform!!.parameters.size) {
             for (i in params.size until onPerform!!.parameters.size) {
                 val param = onPerform!!.parameters[i]
-                Logger.warning(" Adjusting: ${param.type.classifier}")
                 params[param] = when (param.type.classifier) {
                     Int::class -> -1
                     Double::class -> -1
@@ -180,21 +178,6 @@ class AltairCMD(
 
         return super.tabComplete(sender, alias, args)
     }
-
-    private fun assignParam(params: MutableMap<KParameter, Any?>,onPerform: KFunction<*>, args: List<String>, paramPointer: Int, argPointer : Int) {
-        val param = onPerform.parameters[paramPointer]
-
-        when (param.type.classifier) {
-            Player::class -> {
-                val player = Bukkit.getPlayer(args[argPointer])
-                if (param.hasAnnotation<Default>() && player == null) {
-
-                }
-
-            }
-        }
-    }
-
 
     override fun toString(): String {
         return this.name
