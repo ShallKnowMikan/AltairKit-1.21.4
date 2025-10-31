@@ -24,6 +24,13 @@ class ConfigManager {
 
     fun get(file: String) = fileMap[file]
 
+    fun getConfig(file: String) = ConfigFile(plugin,file)
+
+    fun getYaml(file: String) : YamlConfiguration {
+        val f = File(this.plugin.dataFolder, file)
+        return YamlConfiguration.loadConfiguration(f)
+    }
+
 
     /*
     * Loads a file
@@ -53,7 +60,7 @@ class ConfigManager {
         }
 
         val config = YamlConfiguration.loadConfiguration(file);
-        fileMap.put(path,config)
+        fileMap[path] = config
 
         return this
     }

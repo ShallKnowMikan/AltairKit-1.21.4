@@ -39,7 +39,6 @@ class AltairCMD(
         arguments: Array<out String>
     ): Boolean {
         val params = mutableMapOf<KParameter, Any?>()
-        val logger = Bukkit.getLogger()
 
         if (arguments.isNotEmpty() && tree.fetch { cmd -> cmd.name == arguments[0] } != null) {
             val subCommand = tree.fetch { cmd -> cmd.name == arguments[0] }
@@ -66,8 +65,6 @@ class AltairCMD(
         }
 
 
-        if (onPerform == null) return false
-
         /*
         * Since param 1 and 2 in the method will always be
         * this.instance and Actor in this for loop you will
@@ -77,93 +74,78 @@ class AltairCMD(
         params[onPerform!!.parameters[0]] = instance
         params[onPerform!!.parameters[1]] = actor
 
-        /*
-        * Wrong parameters will bring to null values, -1
-        * or empty strings
-        * if the method requires n(parmsOffset) parameters and only 1
-        * has been passed then the last will enter the
-        * catch for index out of bounds (args - parmsOffset = invalid index)
-        * */
-
-
-        /*
-        * Here I sum them (parmsOffset + defaultParams) in order to get
-        * how much positions I have to scale from args
-        *
-        * default params is the amount of time a parameter with @Default
-        * annotation has been encountered
-        * */
         val paramsOffset = 2
 
-        // If args ar more than expected here they'll be cut into
-        // actor#args
-
-
-        val stack = ArrayDeque<String> ()
-
-        val args = ArrayDeque<String> ().apply { this.addAll(arguments) }
+        var argsPointer = 0
+        var paramsPointer = 0 + paramsOffset
 
         /*
-        * Cannot remove based on the total number of default params here
-        * because I still don't know if those defaults are "called"
+        * First it assigns as many arg as possible, considering @Default annotation
+        * then, if are required more parameters than provided args, it will
+        * automatically set the remaining params with one of those: null | "" | -1
         * */
-        val paramsTotal = onPerform!!.parameters.size
 
-        while (args.size + paramsOffset > paramsTotal){
-            stack.addLast(args.removeLast())
+        while (argsPointer < arguments.size && paramsPointer < onPerform!!.parameters.size) {
+            val param = onPerform!!.parameters[paramsPointer]
+            when (onPerform!!.parameters[paramsPointer]) {
+                Player::class -> {
+                    val player = Bukkit.getPlayer(arguments[argsPointer])
+                    if (player == null && param.hasAnnotation<Default>() && actor.isPlayer()) {
+                        params[param] = actor.asPlayer()
+
+                        paramsPointer ++
+                        continue
+                    }
+                    else {
+                        paramsPointer ++
+                        argsPointer ++
+                        params[param] = null
+                        continue
+                    }
+                }
+
+                Double::class -> {
+                    params[param] = if (arguments[argsPointer].isParsableToDouble()) arguments[argsPointer].toDouble()
+                    else if (arguments[argsPointer].isParsableToInt()) arguments[argsPointer].toInt()
+                    else -1.0
+                }
+
+                Int::class -> {
+                    params[param] =  if (arguments[argsPointer].isParsableToInt()) arguments[argsPointer].toInt()
+                    else -1
+                }
+
+                String::class -> {params[param] = arguments[argsPointer].toString()}
+            }
+            paramsPointer ++
+            argsPointer ++
         }
 
-        actor.args.toMutableList().addAll(stack)
+//        Logger.warning(" Param values til now: ${params.values} | argIndex: $argsPointer of ${arguments.size} | paramIndex: $paramsPointer of ${onPerform!!.parameters.size}")
 
-        for (i in onPerform!!.parameters.indices) {
-            if (i < 2) continue
-            val param = onPerform!!.parameters[i]
 
-            /*
-            * @Default annotation applies to player only
-            * */
-            val defaultParam = param.hasAnnotation<Default>()
-
-            val argIndex = onPerform!!.parameters.indexOf(param) - paramsOffset
-
-            when (param.type.classifier) {
-                Player::class -> params[param] =  try {
-                    val player = Bukkit.getPlayer(args[argIndex])
-                    player ?: if (defaultParam) {
-                        /*
-                        * In order to avoid troubles with @Default parameters and indexes error, I'm adding
-                        * one element while looping at this conditions
-                        * */
-                        args.addFirst("X")
-                        actor.asPlayer()
-                    }
-                    else null
-                } catch (_: IndexOutOfBoundsException) {
-                    null
-                }
-                String::class -> params[param] = try {
-                    args[argIndex]
-                } catch (_: IndexOutOfBoundsException) { "" }
-                Int::class -> {
-                    val arg = try {
-                        args[argIndex]
-                    } catch (_: IndexOutOfBoundsException) { "-1" }
-                    params[param] = if (arg.isParsableToInt()) arg.toInt() else -1
-                }
-                Double::class -> {
-                    val arg = try {
-                        args[argIndex]
-                    } catch (_: IndexOutOfBoundsException) { "-1" }
-                    params[param] = if (arg.isParsableToDouble()) arg.toDouble()
-                    else if (arg.isParsableToInt()) arg.toInt()
-                    else -1.0
-
+        if (params.size < onPerform!!.parameters.size) {
+//            Logger.warning(" Adjusting params.")
+//            Logger.warning(" from: ${params.size} to ${onPerform!!.parameters.size}")
+            for (i in params.size until onPerform!!.parameters.size) {
+                val param = onPerform!!.parameters[i]
+                Logger.warning(" Adjusting: ${param.type.classifier}")
+                params[param] = when (param.type.classifier) {
+                    Int::class -> -1
+                    Double::class -> -1
+                    Float::class -> -1
+                    Long::class -> -1
+                    Player::class -> if (param.hasAnnotation<Default>() && actor.isPlayer()) actor.asPlayer() else null
+                    String::class -> ""
+                    else -> null
                 }
             }
-
+//            Logger.warning(" adjusted params: ${params.values}")
         }
+
         onPerform!!.callBy(params)
         return true
+
     }
 
     override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
@@ -201,6 +183,20 @@ class AltairCMD(
         }
 
         return super.tabComplete(sender, alias, args)
+    }
+
+    private fun assignParam(params: MutableMap<KParameter, Any?>,onPerform: KFunction<*>, args: List<String>, paramPointer: Int, argPointer : Int) {
+        val param = onPerform.parameters[paramPointer]
+
+        when (param.type.classifier) {
+            Player::class -> {
+                val player = Bukkit.getPlayer(args[argPointer])
+                if (param.hasAnnotation<Default>() && player == null) {
+
+                }
+
+            }
+        }
     }
 
 
