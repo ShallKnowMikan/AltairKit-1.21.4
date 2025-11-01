@@ -94,6 +94,11 @@ class AltairCMD(
 
                         paramsPointer ++
                         continue
+                    } else if (player != null) {
+                        params[param] = player
+                        paramsPointer ++
+                        argsPointer ++
+                        continue
                     }
                     else {
                         paramsPointer ++
