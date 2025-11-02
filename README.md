@@ -11,7 +11,13 @@ This project is meant to simplify Minecraft plugin development.
 ## OR 
 
 1. Download the `AltairKit.jar` file from the releases and put it into a folder. 
-2. then run: ```mvn install:install-file -DgroupId=dev.mikan -DartifactId=AltairKit -Dversion=1.21.4 -Dpackaging=jar -Dfile=dir/to/AltairKit-1.21.4.jar``` (be sure to have maven installed first)
+2. then run: ```mvn install:install-file \
+                             -Dfile=./AltairKit-1.21.4.jar \
+                             -DgroupId=dev.mikan \
+                             -DartifactId=AltairKit \
+                             -Dversion=1.21.4 \
+                             -Dpackaging=jar \
+                             -DgeneratePom=true``` (be sure to have maven installed first)
 
 ### Dependency
 
