@@ -52,7 +52,6 @@ class Cmd {
                         if (isLastToken) method else null,
                         instance,
                         if (isLastToken) commandAnnotation else null,
-                        if (isLastToken) completeAnnotation else null,
                         if (isLastToken) senderAnnotation else null,
                         if (isLastToken) permissionAnnotation else null)
 

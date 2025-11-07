@@ -6,7 +6,7 @@ pluginManagement {
 rootProject.name = "AltairKit"
 gradle.rootProject{
     extra["updateRepo"] = true
-    extra["copy"] = false
+    extra["copy"] = true
     extra["outputDir"] = "/home/mikan/Desktop/localhosts/kotlin/plugins/"
 }
 

@@ -1,4 +1,4 @@
 package dev.mikan.altairkit.api.commands.annotations
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Complete(vararg val value: String)

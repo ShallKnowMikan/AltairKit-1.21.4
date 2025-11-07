@@ -6,6 +6,7 @@ import com.mojang.authlib.properties.Property
 import dev.mikan.altairkit.api.commands.AltairCMD
 import dev.mikan.altairkit.api.commands.Cmd
 import dev.mikan.altairkit.api.commands.CmdClass
+import dev.mikan.altairkit.test.Commands
 import dev.mikan.altairkit.utils.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -32,7 +33,7 @@ class AltairKit : JavaPlugin() {
 
     override fun onEnable() {
         // Testing only
-
+        registerCommands(Commands())
     }
 
 

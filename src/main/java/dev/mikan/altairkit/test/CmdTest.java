@@ -21,7 +21,6 @@ public class CmdTest implements CmdClass {
     }
 
     @Command("Altair")
-    @Complete({"kit","by","mikan"})
     @Permission("dev.mikan.module")
     @Sender(User.PLAYER)
     public void altair(final Actor actor, @Default Player target, String message) {
