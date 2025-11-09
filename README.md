@@ -4,36 +4,69 @@ This project is meant to simplify Minecraft plugin development.
 
 ## Installation
 
-1. Download the `AltairKit.jar` file from the releases and the `AltairBuilder.exe` file.  
-2. Place both files in the same folder and run `AltairBuilder.exe`.  
-3. Add the dependency to your project:
-
-## OR 
-
-1. Download the `AltairKit.jar` file from the releases and put it into a folder. 
-2. then run: ```mvn install:install-file 
-                             -Dfile=./AltairKit-1.21.4.jar 
-                             -DgroupId=dev.mikan 
-                             -DartifactId=AltairKit 
-                             -Dversion=1.21.4 
-                             -Dpackaging=jar 
-                             -DgeneratePom=true``` (be sure to have maven installed first)
-
-### Dependency
-
 #### Maven
 
 ```xml
-<dependency>
-  <groupId>dev.mikan</groupId>
-  <artifactId>AltairKit</artifactId>
-  <version>${version}</version>
-</dependency>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+<repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.ShallKnowMikan</groupId>
+        <artifactId>AltairKit-1.21.4</artifactId>
+        <version>Tag</version>
+    </dependency>
+    <!-- Kotlin standard library -->
+    <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-stdlib</artifactId>
+        <version>1.9.25</version>
+    </dependency>
+
+    <!-- Kotlin reflection library -->
+    <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-reflect</artifactId>
+        <version>1.9.25</version>
+    </dependency>
+</dependencies>
 ```
 ### Gradle (.kts)
 ```kotlin
-implementation("dev.mikan:AltairKit:1.21.4")
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    implementation("com.github.ShallKnowMikan:AltairKit-1.21.4:1.2")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.25")
+}
 ```
+## Java compatibility
+This library is written in kotlin but I'm trying my best to make it compatible with java.
+If you're planning to use java please add this to ensure maximum compatibility:
+### Maven
+```xml
+<configuration>
+    <compilerArgs>
+      <arg>-parameters</arg>
+    </compilerArgs>
+</configuration>
+
+```
+### Gradle (.kts)
+```kotlin
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << "-parameters"
+}
+```
+
 ## Commands
 Commands API allows you to create commands in the easiest way, by using `annotations`.
 
@@ -44,7 +77,6 @@ In order to successfully register it, the command method must be wrapped in a cl
 public class CmdTest implements CmdClass {
 
   @Command("Altair")
-  @Complete({"kit", "by", "mikan"})
   @Permission("dev.mikan.module")
   @Sender(User.PLAYER)
   public void altair(final Actor actor) {
@@ -58,11 +90,15 @@ Once you create a class with methods like this, you can register the command by 
 AltairKit.registerCommands(cmdClass);
 ```
 
-### Annotations
+### Method annotations
 - `@Command("")` Defines the command. You can write a subcommand by adding a space. Root command and subcommands will automatically be tab-completed.
-- `@Complete(array)` Adds additional tab completion on the last subcommand.
 - `@Permission("node", blocking)` Specifies the required permission. blocking is a boolean (default true) if set to false, the method will still be called even if the player lacks permission
 - `@Sender(SenderType)` Blocks the command execution if the sender type does not match.
+
+### Parameter annotations
+- `@Default("")` Specifies a default value when this parameter is not passed, you can even use it with player objects, if you do you don't need to specify anything in it, just call @Default without parentesis.
+- `@Range(min = 1, max = 2)` Adjusts any parameter passed accordinf to min and max values used. If not specified by default min will be the min integer value possible and max the max integer value possible.
+- `@Complete({array of strings})` List of tab complete suggestions that will pop up for this parameter.
 
 ### Actor
 It represents the sender of the command. It offers useful methods like:
@@ -92,7 +128,6 @@ If the user does not pass those arguments, the defaults are:
 ### @Default annotation
 ```java
 @Command("Altair")
-@Complete({"kit", "by", "mikan"})
 @Permission("dev.mikan.module")
 @Sender(User.PLAYER)
 public void altair(final Actor actor, @Default Player target, String message) {
@@ -102,6 +137,18 @@ public void altair(final Actor actor, @Default Player target, String message) {
 In this case, if the player is passed as parameter, it behaves normally.
 If not, and the command is called like `/altair Hi!`,
 then `target` will automatically be filled with the sender instance.
+
+```java
+@Command("Altair")
+@Permission("dev.mikan.module")
+@Sender(User.PLAYER)
+public void altair(final Actor actor, @Default Player target, @Range(min = 1,max = 2) int number) {
+  target.sendMessage(message);
+}
+```
+As you can easily assume, here we are getting sure that only numbers between 1 and 2 are passed as the last parameter
+and if not it will be changed according to the closest min or max value.
+
 
 ## ConfigManager
 Its purpose is to make it easy to create and load yml files.
