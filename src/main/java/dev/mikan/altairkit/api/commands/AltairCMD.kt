@@ -3,7 +3,6 @@ package dev.mikan.altairkit.api.commands
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToDouble
 import dev.mikan.altairkit.AltairKit.Companion.isParsableToInt
 import dev.mikan.altairkit.api.commands.annotations.*
-import dev.mikan.altairkit.utils.Logger
 import dev.mikan.altairkit.utils.Tree
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -32,17 +31,14 @@ class AltairCMD(
         // Remember that param 0 is instance
         // and param 1 is Actor, so I do not need them
         val size = onPerform.parameters.size
-        Logger.warning(" Initializing: $name")
         for (index in 2 until size) {
             val hasAnnotation = onPerform.parameters[index].hasAnnotation<Complete>()
-            Logger.info("Param: ${onPerform.parameters[index].name} has annotation: $hasAnnotation")
             val completeAnnotation = onPerform.parameters[index].findAnnotation<Complete>()
             if (completeAnnotation != null)
                 completions.add(completeAnnotation.value.toMutableSet())
             else completions.add(mutableSetOf())
         }
 
-        Logger.info("Gotten completions: ${completions}")
 
     }
 
