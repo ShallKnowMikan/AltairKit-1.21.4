@@ -35,7 +35,6 @@ class Cmd {
                 if (commandAnnotation?.value == null || commandAnnotation.value.isEmpty()) continue
 
 
-                val completeAnnotation = method.findAnnotation<Complete>()
                 val permissionAnnotation = method.findAnnotation<Permission>()
                 val senderAnnotation = method.findAnnotation<Sender>()
 
@@ -49,7 +48,7 @@ class Cmd {
                     val cmdString = tokens[i]
                     val isLastToken= (i + 1 == tokens.size)
                     val cmd = AltairCMD(cmdString,cmdTree,
-                        if (isLastToken) method else null,
+                        method,
                         instance,
                         if (isLastToken) commandAnnotation else null,
                         if (isLastToken) senderAnnotation else null,

@@ -27,10 +27,9 @@ class Commands : CmdClass{
              @Default target: Player?,
              @Complete("my patience","controls me","as the hours pass","before I'm alone")
              string: String,
+             @Complete("1","2","3")
              @Range(min = 1, max = 2) int: Double){
         actor.reply("<green>Received: $target $string $int")
     }
-
-
 
 }

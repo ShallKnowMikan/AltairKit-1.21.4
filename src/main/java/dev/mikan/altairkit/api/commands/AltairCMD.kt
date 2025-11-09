@@ -20,14 +20,31 @@ import kotlin.reflect.full.hasAnnotation
 class AltairCMD(
     name: String,
     val tree: Tree<AltairCMD>,
-    var onPerform: KFunction<*>?,
+    var onPerform: KFunction<*>,
     private val instance: Any?,
     val command: Command? = null,
     val sender: Sender? = null,
     val permission: Permission? = null,
-    val completions: MutableList<String> = mutableListOf()
+    val completions: MutableList<MutableSet<String>> = mutableListOf(),
 ) : BukkitCommand(name) {
 
+    init {
+        // Remember that param 0 is instance
+        // and param 1 is Actor, so I do not need them
+        val size = onPerform.parameters.size
+        Logger.warning(" Initializing: $name")
+        for (index in 2 until size) {
+            val hasAnnotation = onPerform.parameters[index].hasAnnotation<Complete>()
+            Logger.info("Param: ${onPerform.parameters[index].name} has annotation: $hasAnnotation")
+            val completeAnnotation = onPerform.parameters[index].findAnnotation<Complete>()
+            if (completeAnnotation != null)
+                completions.add(completeAnnotation.value.toMutableSet())
+            else completions.add(mutableSetOf())
+        }
+
+        Logger.info("Gotten completions: ${completions}")
+
+    }
 
     override fun execute(
         sender: CommandSender,
@@ -67,8 +84,8 @@ class AltairCMD(
         * always be sure that i - 2 won't cause exceptions
         * */
 
-        params[onPerform!!.parameters[0]] = instance
-        params[onPerform!!.parameters[1]] = actor
+        params[onPerform.parameters[0]] = instance
+        params[onPerform.parameters[1]] = actor
 
         val paramsOffset = 2
 
@@ -82,8 +99,8 @@ class AltairCMD(
         *
         * Same goes for @Range annotation
         * */
-        while (argsPointer < arguments.size && paramsPointer < onPerform!!.parameters.size) {
-            val param = onPerform!!.parameters[paramsPointer]
+        while (argsPointer < arguments.size && paramsPointer < onPerform.parameters.size) {
+            val param = onPerform.parameters[paramsPointer]
             val hasRangeAnnotation = param.hasAnnotation<Range>()
             val hasDefaultAnnotation = param.hasAnnotation<Default>()
 
@@ -189,9 +206,9 @@ class AltairCMD(
 
 
 
-        if (params.size < onPerform!!.parameters.size) {
-            for (i in params.size until onPerform!!.parameters.size) {
-                val param = onPerform!!.parameters[i]
+        if (params.size < onPerform.parameters.size) {
+            for (i in params.size until onPerform.parameters.size) {
+                val param = onPerform.parameters[i]
                 val hasDefaultAnnotation = param.hasAnnotation<Default>()
                 val hasRangeAnnotation = param.hasAnnotation<Range>()
                 val defaultAnnotation = param.findAnnotation<Default>()
@@ -227,52 +244,95 @@ class AltairCMD(
             }
         }
 
-        onPerform!!.callBy(params)
+        onPerform.callBy(params)
         return true
 
     }
 
-    override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String?> {
+    override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String> {
 
+        val cmd = this.fetchCommand(sender, alias, args)
+        val cmdCompletions = this.fetchCMDCompletions(cmd,args)
+
+
+        return if (cmd != null && cmdCompletions.isNotEmpty()) {
+            cmdCompletions
+        } else {
+            return processCompletions(args, { super.tabComplete(sender, alias, args) }).toList()
+        }
+
+    }
+
+    private fun fetchCMDCompletions(cmd: AltairCMD?,args: Array<out String>) : List<String>{
+        cmd?: return emptyList()
+        val node = tree.search(cmd) ?: return emptyList()
+
+        val possibleCmdList = mutableListOf<String>()
+        node.children.forEach { node -> possibleCmdList.add(node.data.name) }
+        return possibleCmdList
+    }
+
+    private fun fetchCommand(sender: CommandSender, alias: String, args: Array<out String>) : AltairCMD? {
         // Trying to get last subcommand written, but if space after the command last argument will be ""
         // So I need to get the n - 2 one
 
         // This block returns all successive subcommands starting from first child of root
-        if (args.size > 1) {
-            tree.fetch { cmd -> cmd.name == args[args.size - 2]}?.let {
-                // Remember to use cmd here to refer to AltairKit current instance !!
-                cmd ->
-                val completions = mutableListOf<String>()
-                tree.search(cmd)?.children?.forEach { child -> completions.add(child.data.name) }
+        return if (args.size > 1) tree.fetch { cmd -> cmd.name == args[args.size - 2]}
+        else this
+    }
 
-                return completions.ifEmpty {
-                    return if (cmd.completions.isEmpty()) {
-                        Logger.info("[${cmd.name}] last arg: ${args.get(args.size - 1)}")
-                        super.tabComplete(sender, alias, args)
-                    }
-                    else cmd.completions
-                }
-            }
+
+    private fun processCompletions(fullArgs: Array<out String>,default: () -> List<String>) : List<String> {
+        var cmd: AltairCMD = this
+
+        for (arg in fullArgs) {
+            val tmp = Cmd.getCMD(this.name,arg)
+            if (tmp == null) break
+            cmd = tmp
         }
 
-        // Returns first subcommands from root
-        if (args.size == 1) {
-            val node = tree.search(this)
-            node?: super.tabComplete(sender, alias, args)
-            val possibleCommands = node!!.children.filter { node -> node.data.name.startsWith(args.getOrElse(0){""}) }
-
-            val possibleCmdList = mutableListOf<String>()
-            possibleCommands.forEach { node -> possibleCmdList.add(node.data.name) }
-            return possibleCmdList.ifEmpty {
-                if (this.completions.isEmpty()) {
-                    Logger.info("[${this.name}] last arg: ${args.get(args.size - 1)}")
-                    return super.tabComplete(sender, alias, args)
-                }
-                return this.completions
-            }
+        // The only case in which it is equal to this
+        // is when the command is root and has no subcmds
+        val args = if (cmd != this) {
+            val cmdIndex = fullArgs.indexOfLast { it.lowercase() == cmd.name.lowercase() }
+            fullArgs.toList().subList(cmdIndex + 1,fullArgs.size)
+        } else {
+            fullArgs.toList()
         }
 
-        return super.tabComplete(sender, alias, args)
+        val params = cmd.onPerform.parameters
+        val argNumber = args.size - 1
+        return try {
+            val param = params[argNumber + 2]
+            val type = params[argNumber + 2].type.classifier
+            val completions: List<String> = cmd.completions[argNumber].toList()
+            val isEmpty = completions.isEmpty()
+
+            when (type) {
+                Player::class -> {
+                    if (isEmpty) default()
+                    else completions
+                }
+
+                Int::class -> {
+                    if (isEmpty) listOf("<${param.name}>")
+                    else completions
+                }
+
+                Double::class -> {
+                    if (isEmpty) listOf("<${param.name}>")
+                    else completions
+                }
+
+                String::class -> {
+                    if (isEmpty) listOf("<${param.name}>")
+                    else completions
+                }
+
+                else -> listOf<String>("MemoriaMC!")
+            }
+
+        } catch (e: IndexOutOfBoundsException) {listOf<String>("")}
     }
 
     private fun toLong(string: String): Long {

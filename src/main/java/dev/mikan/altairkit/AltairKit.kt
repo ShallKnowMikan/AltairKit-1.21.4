@@ -1,26 +1,20 @@
 package dev.mikan.altairkit
 
 import com.destroystokyo.paper.profile.ProfileProperty
-import com.mojang.authlib.GameProfile
-import com.mojang.authlib.properties.Property
 import dev.mikan.altairkit.api.commands.AltairCMD
 import dev.mikan.altairkit.api.commands.Cmd
 import dev.mikan.altairkit.api.commands.CmdClass
 import dev.mikan.altairkit.test.Commands
-import dev.mikan.altairkit.utils.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
-import org.bukkit.NamespacedKey
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
-import org.bukkit.persistence.PersistentDataType
-import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.util.BoundingBox
 import java.util.*
@@ -81,8 +75,10 @@ class AltairKit : JavaPlugin() {
         }
 
         @JvmStatic
-        fun addCompletions(cmd: AltairCMD?,list: List<String>) {
-            cmd?.completions?.addAll(list)
+        fun addCompletions(cmd: AltairCMD?, param: Int, completionStrings: Set<String>) {
+            val completions = (cmd?:return).completions
+            completions[param].addAll(completionStrings)
+            completions[param].remove("")
         }
 
         @JvmStatic
